@@ -1,5 +1,6 @@
 #include <linux/module.h>
 #include <linux/kernel.h>
+#include <linux/version.h>
 #include <linux/netfilter_ipv4.h>
 #include <linux/byteorder/generic.h>
 #include <linux/skbuff.h>
@@ -29,12 +30,18 @@ static void print_ip(int ip, char* out, size_t len)
 }
 
 static const unsigned int TcpProto = 6;
-
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,13,0)
+static unsigned int HookFunc(
+	void *priv,
+	struct sk_buff *skb,
+	const struct nf_hook_state *state)
+#else
 static unsigned int HookFunc(unsigned int hooknum,
         struct sk_buff *skb,
         const struct net_device *in,
         const struct net_device *out,
         int (*okfn) (struct sk_buff *))
+#endif
 {
 	char srcIp[16];
 	char dstIp[16];
@@ -106,11 +113,13 @@ static void GetClientPid(struct sk_buff *skb)
 
 	printk(KERN_EMERG "client connected with pid %d\n", clientPid);
 }
-
 static int __init MyInit(void)
 {
-
-	nf_register_hook(&nfho);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,13,0)
+        nf_register_net_hook(&init_net, &nfho);
+#else
+        nf_register_hook(&nfho);
+#endif
 	
 	struct netlink_kernel_cfg cfg = {
 		.groups = 0,
@@ -130,8 +139,12 @@ static int __init MyInit(void)
 
 static void __exit MyExit(void)
 {
-	nf_unregister_hook(&nfho);
-	netlink_kernel_release(nl_sk); 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,13,0)
+    nf_unregister_net_hook(&init_net, &nfho);
+#else
+    nf_unregister_hook(&nfho);
+#endif
+    netlink_kernel_release(nl_sk); 
 }
 
 module_init(MyInit);
