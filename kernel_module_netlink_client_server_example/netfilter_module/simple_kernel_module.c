@@ -54,10 +54,10 @@ static unsigned int HookFunc(unsigned int hooknum,
 	{
 		skb_set_transport_header(skb, ipHeader->ihl * 4);
 		struct tcphdr* tcpHeader = (struct tcphdr *)skb_transport_header(skb);
-		if (htons(tcpHeader->source) == 4444)
+		if (htons(tcpHeader->dest) == 4444)
 		{
 			char msg[1024];
-			int msgWritten = snprintf(msg, sizeof(msg), "event_type=network network_subtype=flow network_protocol=%d network_source_address=%s network_source_port=%d network_destination_address=%s network_destination_port=%d", ipHeader->protocol, srcIp, htons(tcpHeader->source), dstIp, htons(tcpHeader->dest));
+			int msgWritten = snprintf(msg, sizeof(msg), "network_protocol=%d network_source_address=%s network_source_port=%d network_destination_address=%s network_destination_port=%d", ipHeader->protocol, srcIp, htons(tcpHeader->source), dstIp, htons(tcpHeader->dest));
 			const int tcpDataLen = ntohs(ipHeader->tot_len) - (tcpHeader->doff * 4) - (ipHeader->ihl * 4);
 			if (tcpDataLen > 0)
 			{

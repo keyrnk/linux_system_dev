@@ -60,7 +60,8 @@ int main(int argc, char* argv[])
 		dest_addr.nl_pid = 0; /* For Linux Kernel */
 		dest_addr.nl_groups = 0; /* unicast */
 
-		nlh = (struct nlmsghdr *)malloc(NLMSG_SPACE(1024));
+		unsigned char buffer[NLMSG_SPACE(1024)];
+		nlh = (struct nlmsghdr *)buffer;
 		memset(nlh, 0, NLMSG_SPACE(1024));
 		nlh->nlmsg_len = NLMSG_SPACE(1024);
 		nlh->nlmsg_pid = getpid();
@@ -69,7 +70,7 @@ int main(int argc, char* argv[])
 		iov.iov_base = (void *)nlh;
 		iov.iov_len = nlh->nlmsg_len;
 
-                //memset(&msg, 0, sizeof(msg));
+                memset(&msg, 0, sizeof(msg));
 		msg.msg_name = (void *)&dest_addr;
 		msg.msg_namelen = sizeof(dest_addr);
 		msg.msg_iov = &iov;
@@ -80,16 +81,18 @@ int main(int argc, char* argv[])
 		{
 			std::cout << "send pid to kernel failed " << strerror(errno) << std::endl;
                         close(sock_fd);
-		        free(nlh);
-
 			return;
 		}
 
 		while(!stopFlag)
 		{
-			ssize_t recvResult = recvmsg(sock_fd, &msg, 0);
+			ssize_t recvResult = recvmsg(sock_fd, &msg, MSG_DONTWAIT);
 			if (recvResult < 0)
 			{
+				if (errno == EAGAIN || errno == EWOULDBLOCK)
+				{
+					continue;
+				}
 				std::cout << "error recv msg from kernel " << strerror(errno) << std::endl;
 				break;
 			} 
@@ -99,6 +102,5 @@ int main(int argc, char* argv[])
 		}
 
 		close(sock_fd);
-		free(nlh);
 	}
 
