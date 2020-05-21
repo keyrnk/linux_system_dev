@@ -2,7 +2,7 @@
 #include <iostream>
 #include <signal.h>
 
-#include "kernel_filter_listener.h"
+#include "kernel_module_client.h"
 
 std::atomic_bool stopFlag(false);
 
@@ -35,7 +35,7 @@ int main(int argc, char* argv[])
 	return 0;
 }
 
-	void KernelModuleClient::KernelModuleClient(std::atomic_bool& stopFlag)
+	void KernelModuleClient::Run(std::atomic_bool& stopFlag)
 	{		
 		struct sockaddr_nl src_addr, dest_addr;
 		struct nlmsghdr *nlh = NULL;
@@ -69,7 +69,7 @@ int main(int argc, char* argv[])
 		iov.iov_base = (void *)nlh;
 		iov.iov_len = nlh->nlmsg_len;
 
-                memset(&msg, 0, sizeof(msg));
+                //memset(&msg, 0, sizeof(msg));
 		msg.msg_name = (void *)&dest_addr;
 		msg.msg_namelen = sizeof(dest_addr);
 		msg.msg_iov = &iov;

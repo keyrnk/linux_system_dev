@@ -1,4 +1,6 @@
 cmake_minimum_required(VERSION 3.0)
 
-set(SOURCES kernel_filter_listener.cpp)
-add_executable(kernel_filter_listener ${SOURCES})
+project(kernel_module_client)
+
+set(SOURCES kernel_module_client.cpp)
+add_executable(${PROJECT_NAME} ${SOURCES})
